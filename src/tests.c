@@ -592,23 +592,6 @@ void scalar_test(void) {
     }
 
     {
-        /* Test that multipying the scalars is equal to multiplying their numbers modulo the order. */
-        secp256k1_scalar r;
-        secp256k1_num r2num;
-        secp256k1_num rnum;
-        secp256k1_num_mul(&rnum, &snum, &s2num);
-        secp256k1_num_mod(&rnum, &order);
-        secp256k1_scalar_mul(&r, &s, &s2);
-        secp256k1_scalar_get_num(&r2num, &r);
-        CHECK(secp256k1_num_eq(&rnum, &r2num));
-        /* The result can only be zero if at least one of the factors was zero. */
-        CHECK(secp256k1_scalar_is_zero(&r) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_zero(&s2)));
-        /* The results can only be equal to one of the factors if that factor was zero, or the other factor was one. */
-        CHECK(secp256k1_num_eq(&rnum, &snum) == (secp256k1_scalar_is_zero(&s) || secp256k1_scalar_is_one(&s2)));
-        CHECK(secp256k1_num_eq(&rnum, &s2num) == (secp256k1_scalar_is_zero(&s2) || secp256k1_scalar_is_one(&s)));
-    }
-
-    {
         secp256k1_scalar neg;
         secp256k1_num negnum;
         secp256k1_num negnum2;
@@ -632,24 +615,6 @@ void scalar_test(void) {
         secp256k1_scalar_negate(&neg, &neg);
         /* Negating zero should still result in zero. */
         CHECK(secp256k1_scalar_is_zero(&neg));
-    }
-
-    {
-        /* Test secp256k1_scalar_mul_shift_var. */
-        secp256k1_scalar r;
-        secp256k1_num one;
-        secp256k1_num rnum;
-        secp256k1_num rnum2;
-        unsigned char cone[1] = {0x01};
-        unsigned int shift = 256 + secp256k1_rand_int(257);
-        secp256k1_scalar_mul_shift_var(&r, &s1, &s2, shift);
-        secp256k1_num_mul(&rnum, &s1num, &s2num);
-        secp256k1_num_shift(&rnum, shift - 1);
-        secp256k1_num_set_bin(&one, cone, 1);
-        secp256k1_num_add(&rnum, &rnum, &one);
-        secp256k1_num_shift(&rnum, 1);
-        secp256k1_scalar_get_num(&rnum2, &r);
-        CHECK(secp256k1_num_eq(&rnum, &rnum2));
     }
 
     {
@@ -1885,13 +1850,27 @@ void run_ecmult_gen_blind(void) {
 #ifdef USE_ENDOMORPHISM
 /***** ENDOMORPHISH TESTS *****/
 void test_scalar_split(void) {
+<<<<<<< HEAD
     secp256k1_scalar full;
     secp256k1_scalar s1, slam;
     const unsigned char zero[32] = {0};
     unsigned char tmp[32];
+=======
+    secp256k1_scalar_t full;
+    secp256k1_scalar_t s1, slam, tmp;
+    secp256k1_scalar_t lambda = SECP256K1_SCALAR_CONST(
+        0x5363ad4c, 0xc05c30e0, 0xa5261c02, 0x8812645a,
+        0x122e22ea, 0x20816678, 0xdf02967c, 0x1b23bd72
+    );
+>>>>>>> Remove secp256k1_num_mul from num.h
 
     random_scalar_order_test(&full);
     secp256k1_scalar_split_lambda(&s1, &slam, &full);
+
+    /* check that they are a lambda decomposition */
+    secp256k1_scalar_mul(&tmp, &lambda, &slam);
+    secp256k1_scalar_add(&tmp, &tmp, &s1);
+    CHECK(secp256k1_scalar_eq(&tmp, &full));
 
     /* check that both are <= 128 bits in size */
     if (secp256k1_scalar_is_high(&s1)) {
@@ -1899,12 +1878,15 @@ void test_scalar_split(void) {
     }
     if (secp256k1_scalar_is_high(&slam)) {
         secp256k1_scalar_negate(&slam, &slam);
+<<<<<<< HEAD
     }
 
     secp256k1_scalar_get_b32(tmp, &s1);
     CHECK(memcmp(zero, tmp, 16) == 0);
     secp256k1_scalar_get_b32(tmp, &slam);
     CHECK(memcmp(zero, tmp, 16) == 0);
+=======
+>>>>>>> Remove secp256k1_num_mul from num.h
 }
 
 void run_endomorphism_tests(void) {
